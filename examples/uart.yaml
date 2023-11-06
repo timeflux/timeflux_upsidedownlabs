@@ -1,0 +1,24 @@
+graphs:
+  - nodes:
+      - id: data
+        module: timeflux_upsidedownlabs.nodes.driver
+        class: UpsideDownLabs
+        params:
+          rate: 500
+      - id: notch
+        module: timeflux_dsp.nodes.filters
+        class: IIRFilter
+        params:
+          filter_type: bandstop
+          frequencies: [45, 55]
+          order: 2
+      - id: ui
+        module: timeflux_ui.nodes.ui
+        class: UI
+    edges:
+      - source: data
+        target: notch
+      - source: notch
+        target: ui:data
+    rate: 10
+
