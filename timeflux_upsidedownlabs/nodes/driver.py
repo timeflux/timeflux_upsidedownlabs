@@ -1,5 +1,4 @@
-# import sys
-import numpy as np
+import pandas as pd
 from timeflux.core.node import Node
 from threading import Lock
 from pyfirmata2 import Arduino
@@ -33,6 +32,8 @@ class UpsideDownLabs(Node):
         self.rate = rate
         self.pin = 0
         self.timestamp = 0
+        self.timestamps = []
+        self.data = []
         self.board = Arduino(port)
         self.meta = {"rate": rate}
         self._lock = Lock()
@@ -52,14 +53,22 @@ class UpsideDownLabs(Node):
 
     def _callback(self, data):
         """Acquire and cache data."""
+        if self.timestamp == 0:
+            self.timestamp = time.time()
         self._lock.acquire()
-        print(f"{self.timestamp:.3f}\t{data}")
-        self.timestamp += 1 / self.samplingRate
+        # print(f"{self.timestamp:.3f}\t{data}")
+        self.timestamps.append(self.timestamp)
+        self.data.append(data)
         self._lock.release()
+        self.timestamp += 1 / self.rate
 
     def update(self):
         """Update the node output."""
         self._lock.acquire()
+        index = pd.to_datetime(self.timestamps, unit="s")
+        self.o.set(self.data, index, meta=self.meta)
+        self.data = []
+        self.timestamps = []
         self._lock.release()
 
     def terminate(self):

@@ -12,6 +12,9 @@ graphs:
           filter_type: bandstop
           frequencies: [45, 55]
           order: 2
+      # - id: display
+      #   module: timeflux.nodes.debug
+      #   class: Display
       - id: ui
         module: timeflux_ui.nodes.ui
         class: UI
@@ -20,5 +23,7 @@ graphs:
         target: notch
       - source: notch
         target: ui:data
+      # - source: data
+      #   target: display
     rate: 10
 
