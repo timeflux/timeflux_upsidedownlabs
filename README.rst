@@ -24,7 +24,7 @@ You can run it like this:
     $ conda activate timeflux
     $ timeflux -d examples/audio.yaml
 
-The signal can be visualized [here](http://localhost:8000).
+The signal can be visualized `here <http://localhost:8000>`__.
 
 USB interface
 -------------
