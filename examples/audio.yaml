@@ -30,7 +30,7 @@ graphs:
         module: timeflux_audio.nodes.device
         class: Output
         params:
-          amplitude: 200
+          amplitude: 1 # be careful with that setting as high values can damage your audio interface!
         #   device: 4
     edges:
       - source: input
