@@ -1,0 +1,26 @@
+graphs:
+  - id: demo
+    nodes:
+      - id: data
+        module: timeflux_upsidedownlabs.nodes.driver
+        class: UpsideDownLabs
+        params:
+          rate: 100
+          channels:
+            0: ECG
+            2: EMG1
+            3: EMG2
+            100: EEG # will be removed (invalid pin)
+      - id: display
+        module: timeflux.nodes.debug
+        class: Display
+      - id: ui
+        module: timeflux_ui.nodes.ui
+        class: UI
+    edges:
+      - source: data
+        target: ui:data
+      - source: data
+        target: display
+    rate: 10
+

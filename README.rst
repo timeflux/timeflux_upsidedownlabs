@@ -44,10 +44,12 @@ Download the `Arduino IDE <https://www.arduino.cc/en/Main/Software>`__ on your c
 
 You're all set!
 
-An example graph can be found `here <https://github.com/timeflux/timeflux_upsidedownlabs/blob/master/examples/uart.yaml>`__.
+An example graph for the default A0 analog port can be found `here <https://github.com/timeflux/timeflux_upsidedownlabs/blob/master/examples/uart.yaml>`__.
 You can run it like this:
 
 ::
 
     $ conda activate timeflux
     $ timeflux -d examples/uart.yaml
+
+For an example of querying multiple ports and naming the channels, see `this graph <https://github.com/timeflux/timeflux_upsidedownlabs/blob/master/examples/channels.yaml>`__.
