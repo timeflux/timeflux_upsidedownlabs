@@ -1,10 +1,11 @@
 graphs:
-  - nodes:
+  - id: demo
+    nodes:
       - id: data
         module: timeflux_upsidedownlabs.nodes.driver
         class: UpsideDownLabs
         params:
-          rate: 500
+          rate: 250
       - id: notch
         module: timeflux_dsp.nodes.filters
         class: IIRFilter

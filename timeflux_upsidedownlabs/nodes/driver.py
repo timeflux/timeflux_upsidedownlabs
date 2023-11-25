@@ -19,7 +19,7 @@ class UpsideDownLabs(Node):
             Default: autodetect
         channels (dict): The pin/channel mapping.
             Keys are pin numbers and values are channel names.
-            Default: {1: "signal"}
+            Default: autodetect
         rate (int): The device rate in Hz.
             Default: ``500``.
 
@@ -32,31 +32,34 @@ class UpsideDownLabs(Node):
     def __init__(self, port=None, channels=None, rate=500):
         if not port:
             port = Arduino.AUTODETECT
-        if not channels:
-            channels = {1: "signal"}
         self.channels = channels
         self.rate = rate
-        self.timestamp = 0
         self.board = Arduino(port)
-        self.meta = {"rate": rate}
-        self._lock = Lock()
-        self._blink()
-        self.board.samplingOn(1000 / self.rate)
+        if not self.channels:
+            self.channels = {
+                channel: f"A{channel}" for channel in range(len(self.board.analog))
+            }
         for pin in list(self.channels.keys()):
             if pin >= len(self.board.analog):
                 self.logger.warning(f"Removing invalid pin {pin}")
                 del self.channels[pin]
+        self.meta = {"rate": rate}
+        self._lock = Lock()
+        self._blink()
+        self.board.samplingOn(1000 / self.rate)
         self._reset_buffer()
         self._reset_sample()
         for pin, channel in self.channels.items():
             # See: https://docs.python-guide.org/writing/gotchas/#late-binding-closures
-            self.board.analog[pin].register_callback(lambda data, channel=channel : self._callback(data, channel))
+            self.board.analog[pin].register_callback(
+                lambda data, channel=channel: self._callback(data, channel)
+            )
             self.board.analog[pin].enable_reporting()
 
     def _blink(self):
-        """Show a cool led animation"""
+        """Show a cool led animation."""
         pins = [8, 9, 10, 11, 12, 13]
-        for i in range(10):
+        for i in range(5):
             for pin in pins:
                 self.board.digital[pin].write(1)
                 time.sleep(0.02)
@@ -65,38 +68,44 @@ class UpsideDownLabs(Node):
 
     def _callback(self, data, channel):
         """Acquire and cache data."""
-        if self.timestamp == 0:
-            self.timestamp = time.time()
         self._lock.acquire()
+        if self.sample["data"][channel] is not None:
+            self.logger.warn("Corrupted sample")
+            self._reset_sample()
+        self.sample["data"][channel] = data
         self.sample["received"] += 1
-        self.sample["data"][channel].append(data)
-        if not self.sample["timestamp"]:
-            self.sample["timestamp"] = self.timestamp
         if self.sample["received"] == len(self.channels):
             self._commit_sample()
-            self.timestamp += 1 / self.rate
         self._lock.release()
 
     def _reset_buffer(self):
-        """Reset the buffer"""
+        """Reset the buffer."""
         self.timestamps = []
         self.data = {}
         for channel in self.channels.values():
             self.data[channel] = []
 
     def _reset_sample(self):
-        """Reset the sample"""
+        """Reset the sample."""
+        try:
+            timestamp = self.sample["timestamp"]
+            if timestamp == 0:
+                timestamp = time.time()
+            else:
+                timestamp += 1 / self.rate
+        except:
+            timestamp = 0
         self.sample = {
-            "timestamp": None,
-            "data": { channel: [] for channel in self.channels.values() },
-            "received": 0
+            "timestamp": timestamp,
+            "data": {channel: None for channel in self.channels.values()},
+            "received": 0,
         }
 
     def _commit_sample(self):
-        """Append the sample"""
+        """Append the sample."""
         self.timestamps.append(self.sample["timestamp"])
         for channel in self.channels.values():
-            self.data[channel] += self.sample["data"][channel]
+            self.data[channel].append(self.sample["data"][channel])
         self._reset_sample()
 
     def update(self):

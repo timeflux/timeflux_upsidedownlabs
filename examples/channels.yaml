@@ -5,7 +5,7 @@ graphs:
         module: timeflux_upsidedownlabs.nodes.driver
         class: UpsideDownLabs
         params:
-          rate: 100
+          rate: 500
           channels:
             0: ECG
             2: EMG1
